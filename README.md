@@ -1,152 +1,258 @@
-# Eight Academy – Sistema de inscripción de optativas
+# 🎓 Eight Academy – Sistema de Inscripción de Materias Optativas
 
-## Descripción general
+## Descripción
 
-Este repositorio contiene la interfaz web para un sistema de inscripción de materias optativas de la institución educativa Eight Academy. El sistema está diseñado para permitir que un estudiante:
+Sistema web integrado para la gestión de inscripciones de materias optativas en Eight Academy, período lectivo 2026-2027. Proporciona una solución completa que incluye interfaz de inscripción para estudiantes y panel administrativo para la supervisión de cupos e inscritos.
 
-- busque su nombre en la lista oficial,
-- seleccione el nivel correspondiente (Básica o Bachillerato),
-- elija una materia optativa disponible,
-- confirme la inscripción y reciba una confirmación visual.
+**Versión:** 2.0  
+**Enfoque:** Estudiantes de Educación Básica y Bachillerato  
+**Tecnología:** HTML5 + CSS3 + JavaScript (Frontend Estático)
 
-También incluye un panel administrativo para consultar los cupos y ver el listado de estudiantes inscritos, así como exportar la información en formato CSV.
+---
 
-## ¿Qué hace el sistema?
+## Características principales
 
-### 1) Módulo de inscripción para estudiantes
-El archivo principal `index.html` presenta una experiencia de registro digital con estas etapas:
+### 📝 Módulo de inscripción para estudiantes
 
-1. Búsqueda del estudiante por nombre.
-2. Validación del nivel, curso y paralelo en base a la lista oficial.
-3. Visualización de las materias optativas según el nivel del alumno.
-4. Control de cupos por materia.
-5. Confirmación final de la inscripción.
+- **Búsqueda inteligente:** autocompletado de nombres desde la lista oficial institucional
+- **Validación automática:** verificación de datos del estudiante (nivel, curso, paralelo)
+- **Selección de optativas:** interfaz visual con control de cupos en tiempo real
+- **Sincronización de cupos:** actualización automática cada 15 segundos
+- **Confirmación inmediata:** recepción de confirmación visual al completar la inscripción
+- **Diseño responsivo:** experiencia optimizada para dispositivos móviles y de escritorio
 
-La interfaz incluye:
+### 📊 Panel administrativo
 
-- autocompletado de nombres,
-- sugerencias de coincidencias,
-- selección por radio buttons,
-- mensajes de error o éxito,
-- actualización automática de cupos desde la API.
+- **Resumen de cupos:** visualización por materia y nivel educativo
+- **Listado de inscritos:** tabla completa con datos (fecha, nombre, nivel, curso, paralelo, materia)
+- **Exportación de datos:** descarga en formato CSV para análisis posterior
+- **Actualización automática:** refresco de datos cada 20 segundos
+- **Acceso seguro:** integración mediante URL de Google Apps Script
 
-### 2) Módulo administrativo
-El archivo `admin.html` ofrece un panel para revisar el estado del proceso:
-
-- cupos por materia,
-- conteos por nivel,
-- listado completo de inscritos,
-- exportación del registro a CSV.
-
-Esto permite que el personal administrativo supervise la inscripción sin necesidad de revisar manualmente cada solicitud.
+---
 
 ## Arquitectura del sistema
 
-El proyecto está compuesto por dos páginas estáticas en HTML + CSS + JavaScript:
+### Componentes
 
-- `index.html`: página pública para estudiantes.
-- `admin.html`: panel administrativo.
-
-La lógica de negocio y persistencia no está implementada directamente aquí. En su lugar, ambos archivos se conectan a un endpoint de Google Apps Script definido en la constante:
-
-```javascript
-const API_URL = "https://script.google.com/macros/s/.../exec";
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      FRONTEND (Este Repo)                   │
+├─────────────────────────────────────────────────────────────┤
+│  index.html        → Interfaz pública para estudiantes      │
+│  admin.html        → Panel administrativo                   │
+│  README.md         → Documentación técnica                  │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+                      ↓ (API REST)
+┌─────────────────────────────────────────────────────────────┐
+│          BACKEND (Google Apps Script)                       │
+├─────────────────────────────────────────────────────────────┤
+│  • Gestión de cupos                                         │
+│  • Validación de inscripciones                              │
+│  • Persistencia en Google Sheets                            │
+│  • Endpoint API (GET/POST)                                  │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-Ese endpoint es el responsable de:
+### Flujo de datos
 
-- consultar la lista de cupos,
-- registrar la inscripción del estudiante,
-- devolver la información actualizada al frontend,
-- servir datos al panel administrativo.
+1. **Estudiante accede** a `index.html`
+2. **Busca su nombre** → consulta lista offline (precargada)
+3. **Selecciona materia** → el sistema valida cupos (solicitud a API)
+4. **Envía inscripción** → POST a Google Apps Script
+5. **Recibe confirmación** → actualización de cupos en tiempo real
 
-En otras palabras, este repositorio funciona como una capa frontal del sistema, mientras la lógica del backend queda en Google Apps Script.
+---
 
-## Cómo trabaja el flujo
+## Instrucciones de uso
 
-### Flujo del estudiante
+### Acceso para estudiantes
 
-1. El estudiante escribe su nombre en el buscador.
-2. El sistema filtra la lista oficial de estudiantes y muestra coincidencias.
-3. Al seleccionar un estudiante, se completan automáticamente sus datos:
-   - nivel,
-   - curso,
-   - paralelo,
-   - nombre completo.
-4. Se muestran las materias disponibles de acuerdo con el nivel seleccionado.
-5. El usuario elige una materia con cupo disponible.
-6. El frontend envía una solicitud POST a la API con los siguientes datos:
-   - nombre,
-   - curso,
-   - paralelo,
-   - nivel,
-   - materia,
-   - origen.
-7. La API valida y registra la inscripción.
-8. El sistema actualiza los cupos y muestra un mensaje final de éxito.
+```
+https://github.com/slddarias036-art/Opt_2526
+```
 
-### Flujo administrativo
+Abrir el archivo `index.html` desde el navegador web.
 
-1. El administrador abre `admin.html`.
-2. Ingresa la URL del Google Apps Script.
-3. El panel consulta `?admin=1` para recuperar los datos.
-4. El sistema muestra:
-   - resumen por nivel,
-   - conteo de cupos por materia,
-   - lista de todos los inscritos.
-5. El administrador puede exportar la información a CSV.
+**Proceso de inscripción:**
+
+1. Escribe tu nombre completo
+2. Selecciona de las sugerencias que aparecen
+3. Verifica tus datos (nivel, curso, paralelo)
+4. Elige tu materia optativa
+5. Confirma la inscripción
+6. Recibe confirmación visual
+
+### Acceso administrativo
+
+```
+https://github.com/slddarias036-art/Opt_2526/blob/main/admin.html
+```
+
+Abrir el archivo `admin.html` desde el navegador web.
+
+**Proceso administrativo:**
+
+1. Ingresa la URL del Google Apps Script (proporcionada por el desarrollador)
+2. Haz clic en "Ver inscripciones"
+3. Visualiza:
+   - Cupos por materia (Bachillerato)
+   - Cupos por materia (Educación Básica)
+   - Listado completo de inscritos
+4. Exporta datos a CSV si lo necesitas
+
+---
 
 ## Estructura del repositorio
 
-```text
+```
 Opt_2526/
-├── index.html        # Interfaz para que los estudiantes inscriban optativas
-├── admin.html        # Panel administrativo para revisar cupos e inscritos
-└── README.md         # Documentación del proyecto
+├── index.html              # Interfaz de inscripción para estudiantes
+├── admin.html              # Panel administrativo
+└── README.md               # Documentación del proyecto
 ```
 
-## Datos principales manejados
+### Tamaño y composición
+- **Tamaño total:** ~70 KB
+- **Lenguaje:** 100% HTML5 (CSS y JavaScript incrustados)
+- **Archivos:** 2 páginas estáticas
 
-El sistema trabaja con información como:
-
-- nombre del estudiante,
-- nivel (Básica o Bachillerato),
-- curso,
-- paralelo,
-- materia seleccionada,
-- fecha y hora de inscripción,
-- cupos disponibles por materia.
+---
 
 ## Configuración requerida
 
-Para que el sistema funcione completo, se debe configurar la URL del backend de Google Apps Script en los archivos:
+### 1. URL del Google Apps Script
 
-- `index.html` en la variable `API_URL`
-- `admin.html` al conectarse desde el panel administrativo
+El sistema requiere una URL de backend configurada en ambos archivos:
 
-Ejemplo:
-
+**En `index.html` (línea 175):**
 ```javascript
 const API_URL = "https://script.google.com/macros/s/AKfycbx4DxNzsHBOvOs5N8l-FQArV35e_EJ25aSMopSKbtL4md-sXSszCc1-aDGrw4XKGStTBw/exec";
 ```
 
-## Requisitos
+### 2. Lista de estudiantes
 
-- navegador web moderno,
-- acceso a Internet,
-- URL válida de Google Apps Script configurada,
-- lista oficial de estudiantes (pre-cargada en `index.html` o gestionada en el backend).
+La lista oficial de estudiantes se pre-carga en `index.html` (línea 178):
 
-## Observaciones del proyecto
+```javascript
+const ESTUDIANTES = [
+  {"nombre": "AMANGANDI PILAMUNGA KAROL ARIANA", "curso": "8vo", "paralelo": "A", "nivel": "Basica"},
+  {"nombre": "BARRIONUEVO GALEAS LUISANA VALENTINA", "curso": "8vo", "paralelo": "B", "nivel": "Basica"},
+  // ... más estudiantes
+];
+```
 
-- El código es estático y frontal; no hay un servidor Node.js, Python ni base de datos en este repositorio.
-- La lógica de negocio se externaliza a Google Apps Script, lo que permite manejar inscripciones y cupos de forma centralizada.
-- La UI está construida con HTML, CSS y JavaScript puro, sin frameworks.
+### 3. Materias optativas
 
-## Resumen breve
+Configuradas por nivel en `index.html` (línea 180):
 
-Este sistema automatiza la inscripción de optativas para estudiantes de Eight Academy, controlando la selección, validación y cupos de cada materia, además de ofrecer una vista administrativa para supervisar el proceso y exportar la información.
+```javascript
+const MATERIAS = {
+  Bachillerato: ["Personal Branding", "Video Mapping", "Programación No-Code", "Diseño Gráfico"],
+  Basica: ["Multimedia y Creación de Contenido", "Robótica e IA", "Personal Branding", "Producción Musical"]
+};
+```
 
-## Autor / contexto
+### 4. Cupo máximo por materia
 
-Proyecto orientado a gestión escolar, con enfoque en inscripción de materias optativas para diferentes niveles académicos.
+```javascript
+const CUPO_MAX = 25;  // línea 184
+```
+
+---
+
+## Especificaciones técnicas
+
+### Dependencias
+- Ninguna (vanilla JavaScript, sin librerías externas)
+
+### Navegadores compatibles
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+- Cualquier navegador con soporte ES6
+
+### Conexión a Internet
+- Requerida para sincronización de cupos
+- Requerida para envío de inscripciones
+
+### Almacenamiento
+- LocalStorage: para recordar URL de API en panel administrativo
+
+---
+
+## Funcionalidades detalladas
+
+### Inscripción de estudiantes
+
+| Función | Descripción |
+|---------|-------------|
+| **Autocompletado** | Búsqueda con filtrado en tiempo real |
+| **Validación** | Verificación contra lista oficial |
+| **Control de cupos** | Bloqueo de materias llenas |
+| **Estado de cupos** | Indicador visual (disponibles/pocos/lleno) |
+| **Confirmación** | Resumen visual de inscripción completada |
+| **Reinicio** | Botón para inscribir a otro estudiante |
+
+### Panel administrativo
+
+| Función | Descripción |
+|---------|-------------|
+| **Resumen de cupos** | Visualización de usados vs. máximo |
+| **Separación por nivel** | Vistas independientes (Bachillerato/Básica) |
+| **Tabla de inscritos** | Scroll con historial completo |
+| **Exportación CSV** | Descarga para análisis en Excel/Sheets |
+| **Auto-refresco** | Actualización cada 20 segundos |
+
+---
+
+## Requisitos de implementación
+
+✅ **Completado en este repositorio:**
+- Interfaz HTML5 responsiva
+- Lógica de validación en cliente
+- Autocompletado de estudiantes
+- Control visual de cupos
+- Panel administrativo
+
+⚠️ **Requiere implementación externa (Google Apps Script):**
+- Base de datos de inscripciones
+- Validación de cupos en servidor
+- Persistencia en Google Sheets
+- Endpoint REST para consultas
+
+---
+
+## Notas de seguridad
+
+- La lista de estudiantes se carga en el cliente (visible en el navegador)
+- La validación principal debe ocurrir en el backend
+- Se recomienda proteger la URL de API con autenticación adicional
+- Los datos sensibles nunca se deben hardcodear en el HTML
+
+---
+
+## Autor / Responsable
+
+**Institución:** Eight Academy  
+**Período:** 2026-2027  
+**Mantenedor del repositorio:** slddarias036-art
+
+---
+
+## Enlaces de acceso
+
+| Recurso | Enlace |
+|---------|--------|
+| **Repositorio GitHub** | [slddarias036-art/Opt_2526](https://github.com/slddarias036-art/Opt_2526) |
+| **Interfaz de estudiantes** | [Abrir index.html](https://github.com/slddarias036-art/Opt_2526/blob/main/index.html) |
+| **Panel administrativo** | [Abrir admin.html](https://github.com/slddarias036-art/Opt_2526/blob/main/admin.html) |
+| **Ver código fuente** | [Explore repository](https://github.com/slddarias036-art/Opt_2526) |
+
+---
+
+## Resumen
+
+Este sistema automatiza completamente el proceso de inscripción de materias optativas, eliminando tramitología manual y proporcionando visibilidad en tiempo real sobre el estado de cupos. La arquitectura desacoplada permite mantener la interfaz independiente de los cambios en el backend, facilitando actualizaciones futuras y reutilización en otros períodos académicos.
