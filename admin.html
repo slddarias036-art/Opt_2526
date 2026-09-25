@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eight Academy | Panel Administrativo Optativas</title>
+<style>
+  :root{ --azul:#123c69; --azul-claro:#1c5d99; --gris:#f4f6f8; --borde:#d7dee5; --verde:#2e8b57; --rojo:#c0392b;}
+  *{box-sizing:border-box;}
+  body{font-family:'Segoe UI',Arial,sans-serif; margin:0; background:var(--gris); color:#1f2937;}
+  header{background:var(--azul); color:#fff; padding:20px; text-align:center;}
+  .contenedor{max-width:1000px; margin:24px auto; padding:0 16px 60px;}
+  .card{background:#fff; border-radius:12px; padding:20px; box-shadow:0 8px 20px rgba(18,60,105,.1); margin-bottom:20px;}
+  .clave-wrap{max-width:360px; margin:60px auto; text-align:center;}
+  input[type=password], input[type=text]{width:100%; padding:12px; border-radius:8px; border:1.5px solid var(--borde); font-size:1rem;}
+  .btn{padding:11px 18px; border:none; border-radius:8px; background:var(--azul-claro); color:#fff; font-weight:700; cursor:pointer; margin-top:12px;}
+  .btn:hover{background:var(--azul);}
+  table{width:100%; border-collapse:collapse; font-size:.88rem; margin-top:10px;}
+  th, td{padding:9px 10px; text-align:left; border-bottom:1px solid #eef1f4;}
+  th{background:var(--gris); position:sticky; top:0;}
+  .resumen-cupos{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-top:10px;}
+  .resumen-cupos div{background:var(--gris); border-radius:10px; padding:12px 14px;}
+  .resumen-cupos b{display:block; font-size:1.3rem; color:var(--azul);}
+  .tabla-wrap{max-height:420px; overflow:auto; border:1px solid var(--borde); border-radius:8px;}
+  .oculto{display:none !important;}
+  .top-actions{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;}
+</style>
+</head>
+<body>
+
+<header><h1>📊 Panel Administrativo &mdash; Optativas Eight Academy</h1></header>
+
+<div class="contenedor">
+
+  <div class="card clave-wrap" id="loginBox">
+    <p>Pega la URL de tu Google Apps Script (API_URL) para ver los datos:</p>
+    <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+    <button class="btn" onclick="conectar()">Ver inscripciones</button>
+  </div>
+
+  <div id="panel" class="oculto">
+    <div class="card">
+      <h2>Cupos por materia — Bachillerato</h2>
+      <div class="resumen-cupos" id="resumenCuposBachillerato"></div>
+    </div>
+
+    <div class="card">
+      <h2>Cupos por materia — Educación Básica</h2>
+      <div class="resumen-cupos" id="resumenCuposBasica"></div>
+    </div>
+
+    <div class="card">
+      <div class="top-actions">
+        <h2 style="margin:0;">Listado de inscritos (<span id="totalInscritos">0</span>)</h2>
+        <button class="btn" onclick="exportarCSV()">⬇️ Exportar CSV</button>
+      </div>
+      <div class="tabla-wrap">
+        <table id="tablaInscritos">
+          <thead>
+            <tr><th>#</th><th>Fecha</th><th>Nombre</th><th>Nivel</th><th>Curso</th><th>Paralelo</th><th>Materia</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let API_URL = '';
+let inscripcionesCache = [];
+
+function conectar(){
+  API_URL = document.getElementById('apiUrlInput').value.trim();
+  if (!API_URL){ alert('https://script.google.com/macros/s/AKfycbx4DxNzsHBOvOs5N8l-FQArV35e_EJ25aSMopSKbtL4md-sXSszCc1-aDGrw4XKGStTBw/exec/admin.html'); return; }
+  localStorage.setItem('ea_admin_api', API_URL);
+  cargarDatos();
+}
+
+// recordar la última URL usada en este navegador
+window.addEventListener('load', () => {
+  const guardada = localStorage.getItem('ea_admin_api');
+  if (guardada){
+    document.getElementById('apiUrlInput').value = guardada;
+  }
+});
+
+function pintarCupos(contenedorId, conteo, cupoMax){
+  const resumen = document.getElementById(contenedorId);
+  resumen.innerHTML = '';
+  Object.keys(conteo).forEach(materia => {
+    const usados = conteo[materia];
+    const div = document.createElement('div');
+    div.innerHTML = `<b>${usados}/${cupoMax}</b>${materia}`;
+    resumen.appendChild(div);
+  });
+}
+
+async function cargarDatos(){
+  try{
+    const resp = await fetch(API_URL + '?admin=1');
+    const data = await resp.json();
+    if (!data.ok){ alert('Error: ' + data.error); return; }
+
+    document.getElementById('loginBox').classList.add('oculto');
+    document.getElementById('panel').classList.remove('oculto');
+
+    // Cupos, separados por nivel
+    const cupoMax = data.cupos.cupoMax;
+    pintarCupos('resumenCuposBachillerato', data.cupos.porNivel.Bachillerato.conteo, cupoMax);
+    pintarCupos('resumenCuposBasica', data.cupos.porNivel.Basica.conteo, cupoMax);
+
+    // Tabla
+    inscripcionesCache = data.inscripciones;
+    const tbody = document.querySelector('#tablaInscritos tbody');
+    tbody.innerHTML = '';
+    inscripcionesCache.forEach((ins, i) => {
+      const tr = document.createElement('tr');
+      const fecha = new Date(ins.timestamp).toLocaleString('es-EC');
+      tr.innerHTML = `<td>${i+1}</td><td>${fecha}</td><td>${ins.nombre}</td><td>${ins.nivel}</td><td>${ins.curso}</td><td>${ins.paralelo}</td><td>${ins.materia}</td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('totalInscritos').textContent = inscripcionesCache.length;
+
+  } catch(err){
+    alert('No se pudo conectar. Revisa la URL. ' + err);
+  }
+}
+
+function exportarCSV(){
+  if (!inscripcionesCache.length){ alert('No hay datos para exportar.'); return; }
+  let csv = 'Fecha,Nombre,Nivel,Curso,Paralelo,Materia\n';
+  inscripcionesCache.forEach(ins => {
+    const fecha = new Date(ins.timestamp).toLocaleString('es-EC');
+    const fila = [fecha, ins.nombre, ins.nivel, ins.curso, ins.paralelo, ins.materia]
+      .map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+    csv += fila + '\n';
+  });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'inscripciones_optativas_eightacademy.csv';
+  a.click();
+}
+
+// auto-refrescar cada 20s si ya está conectado
+setInterval(() => { if (API_URL) cargarDatos(); }, 20000);
+</script>
+</body>
+</html>

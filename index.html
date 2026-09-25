@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eight Academy | Inscripción Materias Optativas</title>
+<style>
+  :root{
+    --azul: #123c69;
+    --azul-claro: #1c5d99;
+    --dorado: #e0a832;
+    --verde: #2e8b57;
+    --rojo: #c0392b;
+    --gris: #f4f6f8;
+    --borde: #d7dee5;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(180deg, var(--azul) 0%, var(--azul-claro) 220px, var(--gris) 220px);
+    min-height:100vh; color:#1f2937;
+  }
+  header{
+    max-width:760px; margin:0 auto; padding:28px 20px 10px; text-align:center; color:#fff;
+  }
+  header h1{margin:0; font-size:1.5rem;}
+  header p{margin:6px 0 0; opacity:.9; font-size:.9rem;}
+  .contenedor{
+    max-width:760px; margin:20px auto 60px; padding:0 16px;
+  }
+  .card{
+    background:#fff; border-radius:14px; padding:22px 22px 26px;
+    box-shadow:0 10px 25px rgba(18,60,105,.12); margin-bottom:18px;
+  }
+  .card h2{margin-top:0; font-size:1.1rem; color:var(--azul);}
+  label{display:block; font-weight:600; margin:14px 0 6px; font-size:.92rem; color:#374151;}
+  input[type=text], select{
+    width:100%; padding:11px 12px; border-radius:9px; border:1.5px solid var(--borde);
+    font-size:1rem; background:#fbfcfe;
+  }
+  input[type=text]:focus, select:focus{outline:none; border-color:var(--azul-claro);}
+  .autocomplete-wrap{position:relative;}
+  .sugerencias{
+    position:absolute; z-index:20; background:#fff; border:1.5px solid var(--borde);
+    border-top:none; width:100%; max-height:230px; overflow-y:auto; border-radius:0 0 9px 9px;
+    box-shadow:0 12px 20px rgba(0,0,0,.08); display:none;
+  }
+  .sugerencias div{padding:10px 12px; cursor:pointer; font-size:.94rem; border-bottom:1px solid #f0f2f5;}
+  .sugerencias div:hover, .sugerencias div.activa{background:var(--gris);}
+  .sugerencias .no-match{color:#9aa5b1; font-style:italic; cursor:default;}
+  .fila2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .badge{
+    display:inline-block; padding:3px 10px; border-radius:20px; font-size:.78rem; font-weight:700;
+    margin-left:8px; vertical-align:middle;
+  }
+  .badge.basica{background:#e4f0ff; color:var(--azul-claro);}
+  .badge.bachillerato{background:#fdf0dc; color:#a5720c;}
+  .solo-lectura{background:#eef1f4; color:#4b5563;}
+  .manual-toggle{
+    margin-top:10px; font-size:.85rem; color:var(--azul-claro); cursor:pointer; text-decoration:underline;
+    display:inline-block;
+  }
+  .materias{display:flex; flex-direction:column; gap:10px; margin-top:8px;}
+  .materia-opcion{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    border:1.6px solid var(--borde); border-radius:10px; padding:12px 14px; cursor:pointer;
+    transition:.15s;
+  }
+  .materia-opcion:hover{border-color:var(--azul-claro);}
+  .materia-opcion.seleccionada{border-color:var(--azul-claro); background:#f0f7ff;}
+  .materia-opcion.llena{opacity:.55; cursor:not-allowed; background:#f7f7f7;}
+  .materia-info{display:flex; align-items:center; gap:10px;}
+  .materia-info input{width:18px; height:18px;}
+  .materia-nombre{font-weight:600; font-size:.96rem;}
+  .cupo-tag{font-size:.8rem; font-weight:700; padding:3px 9px; border-radius:20px;}
+  .cupo-tag.ok{background:#e6f6ec; color:var(--verde);}
+  .cupo-tag.pocos{background:#fff4e0; color:#b8730a;}
+  .cupo-tag.lleno{background:#fbe7e5; color:var(--rojo);}
+  .btn{
+    width:100%; padding:14px; border:none; border-radius:10px; font-size:1rem; font-weight:700;
+    background:var(--azul-claro); color:#fff; cursor:pointer; margin-top:20px; transition:.15s;
+  }
+  .btn:hover{background:var(--azul);}
+  .btn:disabled{background:#b7c2cc; cursor:not-allowed;}
+  .mensaje{
+    margin-top:14px; padding:12px 14px; border-radius:9px; font-size:.92rem; display:none;
+  }
+  .mensaje.error{background:#fbe7e5; color:var(--rojo); display:block;}
+  .mensaje.exito{background:#e6f6ec; color:#1c6b3f; display:block;}
+  .mensaje.info{background:#eaf2fb; color:var(--azul-claro); display:block;}
+  .oculto{display:none !important;}
+  .resumen-final{font-size:.95rem; line-height:1.7;}
+  .resumen-final b{color:var(--azul);}
+  footer{text-align:center; font-size:.78rem; color:#8b97a3; margin:10px 0 30px;}
+  .spinner{
+    display:inline-block; width:16px; height:16px; border:2.5px solid #fff;
+    border-top-color:transparent; border-radius:50%; animation:girar .7s linear infinite; vertical-align:middle; margin-right:6px;
+  }
+  @keyframes girar{to{transform:rotate(360deg);}}
+  a.admin-link{color:#cfe0f2; font-size:.78rem;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎓 Eight Academy</h1>
+  <p>Inscripción en línea &mdash; Materias Optativas 2026-2027</p>
+</header>
+
+<div class="contenedor">
+
+  <!-- PASO 1: Búsqueda del estudiante -->
+  <div class="card" id="card-busqueda">
+    <h2>1. Busca tu nombre</h2>
+    <label for="buscar">Escribe tu nombre completo</label>
+    <div class="autocomplete-wrap">
+      <input type="text" id="buscar" autocomplete="off" placeholder="Ej: Pérez González Ana María">
+      <div class="sugerencias" id="sugerencias"></div>
+    </div>
+    <div id="datosEstudiante" class="oculto">
+      <p style="font-size:.85rem; color:#6b7280; margin:14px 0 0;">Confirma que estos son tus datos oficiales:</p>
+      <div class="fila2">
+        <div>
+          <label>Nivel</label>
+          <select id="nivel" disabled>
+            <option value="">-- Selecciona --</option>
+            <option value="Basica">Educación General Básica</option>
+            <option value="Bachillerato">Bachillerato</option>
+          </select>
+        </div>
+        <div>
+          <label>Nombre completo</label>
+          <input type="text" id="nombreManual" placeholder="Nombre completo" disabled>
+        </div>
+      </div>
+      <div class="fila2">
+        <div>
+          <label>Curso</label>
+          <input type="text" id="curso" placeholder="Ej: 8vo, 1ro..." disabled>
+        </div>
+        <div>
+          <label>Paralelo</label>
+          <input type="text" id="paralelo" placeholder="Ej: A, B, C..." disabled>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 2: Selección de materia -->
+  <div class="card oculto" id="card-materias">
+    <h2>2. Elige tu materia optativa <span id="badgeNivel" class="badge"></span></h2>
+    <div id="listaMaterias" class="materias"></div>
+    <div id="mensajeForm" class="mensaje"></div>
+    <button class="btn" id="btnEnviar" disabled>Confirmar inscripción</button>
+  </div>
+
+  <!-- PASO 3: Confirmación -->
+  <div class="card oculto" id="card-exito">
+    <h2>✅ ¡Inscripción registrada!</h2>
+    <div class="resumen-final" id="resumenFinal"></div>
+    <button class="btn" onclick="location.reload()">Inscribir a otro estudiante</button>
+  </div>
+
+</div>
+
+<footer>
+  Eight Academy · Sistema de inscripción de optativas
+</footer>
+
+<script>
+/* =========================================================
+   CONFIGURACIÓN: pega aquí la URL de tu Google Apps Script
+   (Implementar > Nueva implementación > Aplicación web)
+   ========================================================= */
+const API_URL = "https://script.google.com/macros/s/AKfycbx4DxNzsHBOvOs5N8l-FQArV35e_EJ25aSMopSKbtL4md-sXSszCc1-aDGrw4XKGStTBw/exec";
+
+/* Lista de estudiantes precargada desde el Excel institucional */
+const ESTUDIANTES = [{"nombre": "AMANGANDI PILAMUNGA KAROL ARIANA", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "BARRIONUEVO GALEAS LUISANA VALENTINA", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "BEDOYA QUISHPE ALEX ALFRED", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "CHIRIBOGA MONTEROS STEPHANIE JAEL", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "CÓNDOR ALVARADO ANA MARÍA", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "DE LA TORRE RODRIGUEZ MARTIN ALEJANDRO", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "DUEÑAS SARMIENTO FELIPE SANTIAGO", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "EGAS CUMBA ARIANNA MAYLEEN", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "ERAZO GUERRA ESTEBAN DAVID", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "ESPINOSA YÉPEZ EMILIO JOSUÉ", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "ESTRELLA RUILOVA JOSHUA NIKOLAI", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "FREIRE MORAN JEFF EMMANUEL", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "GODOY SANTILLÁN DOMINIQUE CHARLOTHE", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "MARCILLO RUBIO GABRIEL EDUARDO", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "MENA VALDIVIEZO IAN", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "PALACIOS SANDOVAL RAFAEL DAVID", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "PILATAXI MOREIRA MIKAELA DOMINIQUE", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "QUILUMBA OÑA EMILY NATHALIA", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "SALDARRIAGA MURILLO JOSSELYN IRIANNA", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "SANTACRUZ RIVERA LUIS FERNANDO", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "SARZOSA SALAZAR JULIAN ALEJANDRO", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "VELASCO FLORES JARED MATHIAS", "curso": "8vo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "ASHQUI CARTUCHE KERLY MICAELA", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "BASTIDAS CALVOPIÑA SANTIAGO JAVIER", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "BRAVO BRACHO MAITE GRACIELA", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "CALVACHI ROCHA JULIAN FRANCISCO", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "DELGADO MUQUINCHE PABLO -", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "GONZALON SILVA BIANCA THAIS", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "GUAMANGATE BARAJA JOSUE MATIAS", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "GUERRERO JIMBO NICOLAS ALEJANDRO", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "HERMIDA VALLEJO THOMAS FRANCISCO", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "JACOME ESPINEL FIORELA", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "JARAMILLO AVALOS JULIANA VALENTINA", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "JARAMILLO AVALOS LUCIANA CAMILA", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "LUGO FLORES LUIS JOHANNES", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "MORENO MERINO JUAN DIEGO", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "MOROCHO GUACHAMÍN ESTEBAN ALEJANDRO", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "NEGRÓN AGUILA EMILIO ALEJANDRO", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "PAREDES BUSTOS JADIEL ANTONIO", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "RENDON VACA MATEO ISAAC", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "SALAZAR ALTUNA SANTIAGO BENJAMIN", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "YANEZ NARVAEZ HAZEL AVRIL", "curso": "8vo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "ASTUDILLO CAMACHO PAUL GONZALO", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "CORAL MORENO JOAQUIN ALEJANDRO", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "CORONEL PALOMEQUE MICHELLE ARIANNA", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "GUEVARA SÁENZ RAFAELA -", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "IZA TORRES STEPHANO SALVATORE", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "LOMBEIDA ROSERO GIULIANA MARGARITA", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "MENA HINOPE EMMA NOELIA", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "MONCAYO ROLDAN FAUSTO NIKOLAY", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "MORENO AGUIRRE JOSUE DAVID", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "MUENALA DE LA TORRE MELANY ALISHA", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "NIETO LAYEDRA JOSE JULIÁN", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "NOGALES HERRERA NICOLÁS DAVID", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "ONOFRE MENA VICTORIA ELIZABETH", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "OROZCO CALAHORRANO EMILY SALOMÉ", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "PADILLA LÓPEZ MATÍAS ALEJANDRO", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "PAVON HUERTAS VALENTINA ANAHI", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "QUINTANA MUÑOZ PAULA GABRIELA", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "RENDON VACA MARTIN IGNACIO", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "ROMÁN GUARDERAS ANNA EMILIA", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "UTRERAS CALLE LUCIANA RAFAELLA", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "VACA NUÑEZ CAMILA VICTORIA", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "VARGAS GÓMEZ SARAH -", "curso": "8vo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "AREVALO ARMIJOS LUCAS URIEL", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "BRITO VALVERDE NORIA DANIELA", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "CAZAR VILLACIS RAFAELLA ANABEL", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "JIMENEZ LARA DAYANA SARAHI", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "MANZANO SUAN CAMILA STEPHANIA", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "MARTINEZ ROJAS DANIELA GIOVANNA", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "MEDRANDA COVEÑA DIANA JHULEXI", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "ORBE CUASCOTA LUIS MATIAS", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "ORTIZ ARRIETA JOAQUIN SEBASTIAN", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "RAMIREZ ESCOBAR ZOE VALENTINA", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "RONQUILLO YANEZ NORA MONSERRATH", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "ROSERO MOLINA VIOLETA", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "RUBIO VALAREZO JUAN DAVID", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "RUBIO VITERI PAMELA VALENTINA", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "SILVA BARREZUETA MARIA JOSE", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "SUQUILLO CANDO NATHAN JOEL", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "TAIPE ALTAMIRANO EDUARDO EMANUEL", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "TAPIA PAREDES ALEJANDRO MARTIN", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "VELOZ ANDRADE ANDREA GABRIELA", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "VICENCIO FAJARDO DAYUS MALLKU", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "VINUEZA GRIJALVA CHRISTOPHER NICOLAS", "curso": "8vo", "paralelo": "D", "nivel": "Basica"}, {"nombre": "DE LA TORRE ROMERO JULIA ELISA", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "ALCOCER CARRERA JULIAN DAVID", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "CERDA GUTIERREZ FABIANA RENATA", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "CHICAIZA QUIROZ CHRISTOPHER ADRIAN", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "CRUZ LOUZADO DANIEL ALEJANDRO", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "DE LA A DURAND JUAN PABLO", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "ESTRADA JIMENEZ MARIA FERNANDA", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "GARCÍA POZO BRIANNA RAFAELA", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "GRIJALVA VELASCO JOAQUÍN ALEJANDRO", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "LEON SAQUI SHANIK ARAWI", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "MARTINEZ MAFLA JUAN DIEGO", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "PALACIOS CAYO MAXIMILIANO EMANUEL", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "PAZMIÑO MELENDEZ MARTIN ALESSANDRO", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "QUINTEROS ESPIN PAOLO GEOVANNY", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "QUINTEROS MELO PAULA VALENTINA", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "ROMERO GIRALDO JOSEPH ANTOINE", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "SANTACRUZ FLORES ENRIQUE ALEJANDRO", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "TENE CAIÑO DANNA CAMILA", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "VALDIVIESO SILVA RAFAHELA VALENTINA", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "ZAMBRANO PAILLACHO MATHEO EFRAIN", "curso": "9no", "paralelo": "A", "nivel": "Basica"}, {"nombre": "ANCHAPAXI CAMPAÑA MARTIN ALEJANDRO", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "ANDRADE SALAZAR KAMILO JOSÉ", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "ASTUDILLO TROYA AISHA SARAHI", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "BARBA OCAÑA JOAQUIN ANDRES", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "CARUSO SAMUEL", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "DONOSO BUSTAMANTE ROMINA SARAHI", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "ENRIQUEZ ARIAS HANNALEY JULIANA", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "ESPINEL COELLO FIORELLA IRI", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "MARQUEZ CIFUENTES CRISTIAN XAVIER", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "MARTINEZ ROJAS ANDRES ALEJANDRO", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "MERINO ACOSTA NICOLAS ISAID", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "MOSLER POSSO GOTTHARD -", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "NUÑEZ GONZALEZ PILAR VALENTINA", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "PALACIOS GARCIA VICTORIA ISABELLA", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "PEÑAHERRERA ANDRADE MARTINA ISABEL", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "PIEDRA VINUEZA SOFIA VALENTINA", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "ROSERO DEL POZO NOAH JERONIMO", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "RUIZ MADERO THOMAS ANDRÉS", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "SALAZAR NASEVILLA JULIAN ISAAC", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "TAPIA RIERA MARTIN DAVID", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "VALLEJO NARANJO EMILIA AGUSTINA", "curso": "9no", "paralelo": "B", "nivel": "Basica"}, {"nombre": "AGUIRRE TANDAYAMO DANTE ARATH", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "ALMEIDA SANCHEZ RENZZO DIAN", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "BANGUERA VALENCIA SAMIR STEFANO", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "BERMUDEZ MARTÍNEZ EDER DANIEL", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "BONILLA VARGAS DANTE NICOLAS", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "CARRION VILLALBA AMANDA SOFIA", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "CORTÉS BARAHONA EZEQUIEL -", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "ECHEVERRIA OCHOA PAULA VICTORIA", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "GÓMEZ GUAIGUA MATHIAS NICOLAS", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "HIDALGO PATIÑO CAMILA PAOLA", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "JARAMILLO MANOSALVAS MAURICIO ANDRES", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "MARTINEZ ESPINOSA ANDRES -", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "NUÑEZ VERA MELANIE ARIANA", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "PALACIOS PALTÁN SANTIAGO -", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "PORTER FACTOS GINA LUCCIANA", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "QUILUMBA PAJUÑA MELANY DANIELA", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "RIVERA VARGAS ARIADNE DAYANARA", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "RODRIGUEZ GALARZA ELIAS ABRAHAM", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "VARGAS ALDAS RODRIGO ISMAEL", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "VASQUEZ GONZALEZ RAFAEL JESUS", "curso": "9no", "paralelo": "C", "nivel": "Basica"}, {"nombre": "ABAD SANTACRUZ LUIS MATHIAS", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "ANDRADE SUAREZ JOSEPH DAVID", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "BASSANTE LÓPEZ MARTINA MICAELA", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "BASTIDAS GÓMEZ AXEL BENJAMÍN", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "BURBANO SANMARTÍN PAUL BENJAMÍN", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "CAJAMARCA ULLRICH ANNIE SOFIA", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "FONSECA MONTENEGRO DANNA ISABELLA", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "FONSECA SAMANIEGO IVAN NICOLAS", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "FUENTES ALMEIDA JULIÁN FRANCISCO", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "GUZMÁN YANEZ SAMANTHA VICTORIA", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "MANOBANDA VACAS MIA VALENTINA", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "MANRIQUE PERÉZ ADRIAN ARTURO", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "NARANJO AGUIRRE GABRIEL ALEJANDRO", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "PEREZ PEREZ ROMINA VALENTINA", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "POMBOSA MONTERO RENATO RODRIGO", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "UQUILLAS MEERKAMPER SOFÌA CRISTINA", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "USHCA VALLA NINA MARLYN", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "VALLEJO FAJARDO EMILIA -", "curso": "9no", "paralelo": "D", "nivel": "Basica"}, {"nombre": "BALSECA NAVARRETE DANNA ABIGAIL", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "BARRETO SAAVEDRA RICARDO JOSUE", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "BARRIONUEVO GALEAS DOMENIKA FRANSHESK", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "BASTIDAS BASTIDAS DANNA JULIETH", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "CALVACHI PULGARIN MAICKEL REINALDO", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "CASTILLO CASTRO ISABELA", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "COLOMA CARVAJAL NICOLE VALENTINA", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "CORREA ARELLANO NATHALIA CAROLINA", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "DE LA TORRE ROMERO JOHANNA ISABEL", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "ESIS OCANDO ISAAC", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "GALLEGOS BOADA DANIELA VALENTINA", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "GÓMEZ HARO THOMAS JULIÁN", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "GONZALON SILVA TIHAGO SAUL", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "GUEVARA SEGOVIA MARTIN ALEJANDRO", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "HIDALGO VIVES ANA LAURA", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "JARRIN VALENCIA MARIA PAULA", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "LAYA PATIÑO DIEGO ALEJANDRO", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "MONTALVAN LEON AMELIA", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "RODRÍGUEZ HUAILLAS IAN MARTÍN", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "RUIZ ANDRADE MEGAN ISABELLA", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "SOLIS NAVARRETE MARTIN ALEJANDRO", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "TAPIA ALARCON LUCIANA RAFAELA", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "URRIBARRI BOZA ANDRES -", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "YÁNEZ TOAPANTA DOMÉNICA ALEJANDRA", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "ZARATE SAMANIEGO JOAN MATEO", "curso": "10mo", "paralelo": "A", "nivel": "Basica"}, {"nombre": "ARROYAVE YEPES SALOME", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "BOADA DEL CASTILLO ARIANA MILENA", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "BOSSANO MARTÍNEZ SOFIA ALEJANDRA", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "BROWN TRUJILLO MATHÍAS SEBASTIÁN", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "CARRILLO VALENCIA JULIANA CAROLINA", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "CHICAIZA VALVERDE JULIAN EMILIO", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "CISNEROS ECHEVERRIA CAMILA VALENTINA", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "ESTACIO PARRA ANNA SOPHIA", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "GUTIERREZ VILLALBA FLOR JULIANA", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "HIDALGO PATIÑO ERIK SEBASTIAN", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "HURTADO PULLAS AMELIA RAFAELA", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "LINCANGO SIERRA MIGUEL BARUC", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "MEJIA MIÑO JUAN MARTIN", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "MELO ARBOLEDA LEAH ANABELLA", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "PAUTA ECHEVERRIA EMILIO SEBASTIAN", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "PAZ Y MIÑO DIAZ MANUELA -", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "QUELAL NAVARRETE AMELIE -", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "RUIZ MINDA ANDRÉ NICOLAS", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "SIMBAÑA ESTRADA AMELIA DEL ROSARIO", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "VALVERDE ENRIQUEZ ALISSON NAOMI", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "YANEZ ZEIMULE ANNE SOFIA", "curso": "10mo", "paralelo": "B", "nivel": "Basica"}, {"nombre": "CARTAGENA LINCANGO MARIA EMILIA", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "CRUZ GOMEZ ZARA DANIELA", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "DE LA GUERRA JACOME ARIANA VALENTINA", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "ERAZO CATAÑA SANTIAGO NICOLAS", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "FREIRE NIETO ARIANA ISABELA", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "GALINDO CANO DANIELA VALENTINA", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "GAONA MARTINEZ DANA VALENTINA", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "GARCIA VERA ALEXA VALENTINA", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "LARA PEREZ LUIS ANGEL", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "LOPEZ DOMINGUEZ DANNA ZHARIT", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "MACHADO CASTILLO CAMILO SEBASTIÁN", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "MACHADO PALLAROSO VALENTINA SARAHI", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "MARTINEZ ESPINOSA GAEL -", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "MARTINEZ NARVAEZ MARIA EMILIA", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "MORALES TOAINGA SAMANTHA MELINA", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "SOLORZANO CRUZ BRIANNA ISABELLA", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "SOTOMAYOR CHULDE FRANCISCO DAVID", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "SUAREZ GAIBOR JOAQUIN ELIAN", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "VALLES GALVEZ EMILIO ADRIANO", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "VEGA YEPEZ JEREMIAS ENRIQUE", "curso": "10mo", "paralelo": "C", "nivel": "Basica"}, {"nombre": "ALCIVAR CORNEJO ARIANA VALENTINA", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "ARELLANO ALVAREZ AMELIE FERNANDA", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "CORONEL ANDAGAMA JULIA SAMANTHA", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "CORTEZ FIERRO TAYRA MAILY", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "DIAZ CORTEZ ANDRES FRANCISCO", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "ENCALADA ANDRADE NICOLÁS ALEXANDER", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "ERRAEZ HURTADO JUAN DIEGO", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "ESCOBAR ROMERO BIANCA MICAELA", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "LARA YEROVI KYRA DOMENICA", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "LARCO MEDINA CAMILA SARAHÍ", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "LOPEZ GALLARDO JOEL DAVID", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "LOPEZ ZAMORA ILIZ AUGUSTA", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "MARÍN CHANGO DANIELA ELOISA", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "MARTINEZ MAFLA ISAAC ALEJANDRO", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "MARTINEZ TROYA ALEJANDRO ISMAEL", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "MOLINA MUÑOZ JULIÁN ANDRÉS", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "PARDO BALSECA ADAHIS CAMILA", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "PRADO CALERO ALIX DAVID", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "PUCHAICELA MALLA ADDISON ESTEPHANY", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "PULIDO POZO DANIELLA -", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "REYES NUÑEZ JOSE DANIEL", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "RUIZ ESPIN MATHEW ROLANDO", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "SALAZAR TUPIZA ESTEBAN ANDRÉE", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "SANDOVAL VELASTEGUI CARLOS ANDRÉS", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "TENE CAIÑO LEONARDO ISAIAS", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "VACA FLORES ALEJANDRO LEONEL", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "VELEZ LOPEZ AMY", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "ZAMBRANO BETANCOURT VALENTINA SARAHI", "curso": "1ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "ALTAMIRANO PUENTE DANNA VALENTINA", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "ALVARO CAMPAÑA MIA JHESSUA", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "ARMAS RODRIGUEZ MARIA PAZ", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "BREISTOL DELGADO MATTHEW ANDREW", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "BRICEÑO TOASA SANTIAGO ALEJANDRO", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "CORREA ARELLANO ARIANA BETHSABE", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "ERAS TERAN KEVIN ANDRE", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "GALARZA VILLALVA MATIAS EMILIO", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "LOPEZ POZO DANIELA ABIGAIL", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "LOPEZ POZO PAULA NOHEMI", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "LOZANO ESPINOZA CAMILA ALEJANDRA", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "MEYER CAMACHO REBECA MALENA", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "MUÑOZ GUZMAN ELIAS FERNANDO", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "NG EGAS ANDRES LIANG", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "NIETO CHONG BARBARA MIKAELA", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "PERUGACHI NARANJO JAVIER EMILIANO", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "PIEDRA VINUEZA JULIAN ALEJANDRO", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "RIVADENEIRA SANTILLAN MARTÍN ALEJANDRO", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "RODRÍGUEZ IZURIETA ADRIÁN ALEXANDER", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "SANCHEZ CABRERA CAMILA BERNARDA", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "SANCHEZ DELGADO SARA VALENTINA", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "VALLEJO CORDOVA EMILIA VALENTINA", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "VELASQUEZ SARZOSA FRANCISCO NICOLÁS", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "ZAMBRANO CARREÑO DANNA CAMILA", "curso": "1ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "ACUÑA ANDRADE ARATH BENJAMIN", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "ALBÁN MANANGON EMILY ANGÉLICA", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "ASTUDILLO GREFA EDDI JHIXON", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "CALDERON GARZON MATIAS JOSE", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "CARRANCO RENDÓN ABIGAIL ESTEFANIA", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "CARRIÓN VINUEZA NAHOMI VALENTINA", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "CHIPANTASI SANCHEZ ODALYS MELISSA", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "FAZ ALVARADO EMMA ISABELLA", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "FIERRO YANEZ CHRISTIAN RAFAEL", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "GUERRA ROMERO MATIAS ENMANUEL", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "GUERRERO BARRIONUEVO JULIETH ALFONSINA", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "MADRID FLORES MATIAS JOSUE", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "MERA CARVAJAL JULIANA SALOME", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "MOSQUERA JARAMILLO JUAN FELIPE", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "NIETO GONZALEZ VALENTINA SARAHI", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "RODRIGUEZ RIVAS MATÍAS RAFAEL", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "SARANGO OLMEDO JHONATAN DAVID", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "TRUJILLO CARREÑO ALESSANDRO", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "VALLEJO FAJARDO ALEGRIA -", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "VARGAS COBA MATEO ENRIQUE", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "VERA CARVAJAL JACINTO ESTEFANO", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "ZURITA VELASQUEZ NIKOLAS -", "curso": "1ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "ALDÁS SOLORZANO VALENTINA ANAHI", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "BURBANO GAVILANES JUAN SEBASTIAN", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "CADENA FLORES NAOMI -", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "CAIZA MENDOZA RAFAEL ALEJANDRO", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "CELI DONOSO ESTEBAN ISAAC", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "CRUZ GÁLVEZ ESTEBAN FERNANDO", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "ENDARA GUERRA REINALDO SAMUEL", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "ESCOBAR GOMEZ ALEJANDRO ADRIAN", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "ESIS OCANDO ANGELES", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "ESTACIO PARRA LUCCIANA VIKTORIA", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "GARCES GARRIDO JOAKIM ISAAC", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "HIDALGO MENESES JOSE MARIA", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "MARTIN ARBOLEDA MIA ANTONELLA", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "OJEDA ORTEGA MATIAS FERNANDO", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "ORDOÑEZ BONILLA DANIEL ALEJANDRO", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "REVELO MORENO NICOLAS -", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "RODRIGUEZ BASTIDAS BRADLEY JOSHUA", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "SILVA URUEÑA ISABELLA", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "SIMBAÑA DEL CASTILLO VALENTINA ISABELA", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "TAPIA RIERA MACARENA SALOME", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "TAPIA RODRIGUEZ MAR RAFAELA", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "TOSCANO REALPE JULIAN ALESSANDRO", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "VACA NUÑEZ EMILY MARTINA", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "VALENCIA NUÑEZ FRANCESCA DONATELLE", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "VALLEJO NARANJO ISABELLA CRISTINA", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "VINUEZA GRIJALVA EMILY DALILA", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "YEPEZ COTACACHI EMMA ALEJANDRA", "curso": "1ro", "paralelo": "D", "nivel": "Bachillerato"}, {"nombre": "ABRIL LLERENA MAARTEN JOHAO", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "BRAVO CARDONA JUANA ISABELLA", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "CADENA CORDOVA TERESA JHAMEL", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "CUMBE DOMINGUEZ AMELIA VALENTINA", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "FERNANDEZ DÁVILA VICTOR SEBASTIAN", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "FLORES MONTALVO FARID EMILIANO", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "GALEANO HERNÁNDEZ JULIANA -", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "GODOY GALARZA CAMILA ABIGAIL", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "GUANO LLUNDO CARLOS ISAAC", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "MANRIQUE DEL POZO ROMINA MICAELA", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "MARTINEZ NARVAEZ MATIAS DANIEL", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "MENDOZA SALAZAR ESTEBAN EDUARDO", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "MIRANDA MERA ALFREDO BLADIMIR", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "ORTIZ LARA ÁMBAR CARMINE", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "RODRIGUEZ CRUZ MARGEORY ELIZABETH", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "ROSERO BELTRAN ASHLEY KAMILA", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "SAMANIEGO CASTILLO VALENTINA LIZETH", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "SÁNCHEZ OBANDO MATEO FERNANDO", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "VALENCIA ARCOS MATIAS BENJAMIN", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "VALLE ANDRADE GENESIS NOELIA", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "VASCONEZ VALENCIA DIEGO ALEXIS", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "VASQUEZ LABARCA ROBERT GERARDO", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "VELEZ DELGADO DAVID SANTIAGO", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "VENEGAS SOLORZANO JULIETA SALOME", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "VILLAVICENCIO FUENTES JOAQUIN RAFAEL", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "VITERI ARROYO MARIA GRACIA", "curso": "2do", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "AGUINAGA RAMOS ESTEFANY GISSELL", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "ARCINIEGA GUERRA ESTEFANY -", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "BALDEON AHTTY DANNA STEPHANIA", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "BALDEÓN ROSERO DAYANA MILENA", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "CALVACHI ROCHA VALERIA ABIGAIL", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "CARRERO AVILA VICTORIA ISABEL", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "CASTILLO CASTRO NICOLAS ALESSANDRO", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "DE LA A DURAND MATHEO FRANCISCO", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "DIAZ GUAJARDO ANNA PAULA", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "DUQUE CANDO NAYLA JORDANA", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "FLORES ESPINOZA KAREN AITANA", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "GONGORA DIAZ NAIM -", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "HOLGUIN VERA SIOUX ELOY", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "KOZA ANANGONÓ KERSTIN JOHANNA", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "MUELA MORILLO CAMILA ALEJANDRA", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "NEGRETE BUITRON PABLO ALEJANDRO", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "RAMOS ORTIZ THEO ISMAEL", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "RIVERA VARGAS MARIA FRANCISCA", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "RODRIGUEZ MALDONADO CIELO GEOVANNA", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "RODRIGUEZ VALLEJOS KAREN ALEJANDRA", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "RON GÁLVEZ DANIEL ALEJANDRO", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "RUIZ MIÑO DHANNY PAUL", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "SALINAS NOGALES ROBERTO MARTIN", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "SOSA CUENCA BRUNO ANDRES", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "VELASCO SARANGO MATYAS RENAN", "curso": "2do", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "ALMEIDA VÁSQUEZ STEEVEN MANUEL", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "ALVEAR SANCHEZ LUCIANA VALENTINA", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "ANDRADE BONILLA BENJAMIN JACOB", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "ATIENCIA SUAREZ VALENTINA SALOME", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "BALSECA NAVARRETE AARON ISAI", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "CHANG HUANG VERA ARIANA FRANCESCA", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "GARCIA LARRAGA MARIA PAULA", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "GUEVARA SÁENZ EMILIO JOSÉ", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "LANDAZURI FABARA MIA SOL", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "MONTOYA MONCAYO JOSÉ ANTONIO", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "MORENO MERINO TOMAS ALEJANDRO", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "NUÑEZ VERA LESLIE NICOLE", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "PAREDES FLORES JUAN MATEO", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "PROAÑO HEREDIA LIONEL ISAIAS", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "QUINATOA CANDO ANGELINA BRIGITTE", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "SALAZAR PÉREZ ASHLEY ZURIN", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "TAPIA SALAS THOMAS SEBASTIAN", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "TERÁN JURADO ESTÉFANO DANIEL", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "TERÁN MEDRANO SAMANTA ARACELY", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "VALDEZ TAPIA ARIANA ALEJANDRA", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "VILLOTA ARCOS MARIA JOSE", "curso": "2do", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "AGUILAR DIAZ NAHIR", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "ANDRADE CARGUA JUAN FRANCISCO", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "ARIAS CAÑIZARES OSCAR MARTIN", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "BENAVIDES ESTRELLA ESTEBAN GABRIEL", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "BUENAÑO SUNTAXI LESLY SAMANTHA", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "CASTILLO VELASTEGUI JORGE MATHIAS", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "CHIPANTASI SANCHEZ ALISSON GEOVANNA", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "FERNANDEZ SALVADOR SARAH VICTORIA", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "GORDON AGUIRRE THIAGO NICOLAS", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "GUALLASAMIN MORENO JOAQUIN RENATO", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "LLUSCA CHÁVEZ JOSÉ DAVID", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "NAITO JARAMILLO LIANA NICANDRA", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "NAVARRETE BAEZ JOSE MIGUEL", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "ORTIZ MOREIRA MISHELL FERNANDA", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "PALACIOS CAYO MARCELO FERRER", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "PAREDES CAJO PAULO EMILIO", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "POVEDA DE SUCRE BENJAMIN", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "RODRIGUEZ CHAVEZ MATHIAS FRANCISCO", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "USHCA VALLA DARIEL AARON", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "VALENCIA FALCONÍ MELANIE LUCIA", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "VINUEZA AYALA MARTIN NICOLAS", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "YEPEZ REVELO KAHYLA RYHANNA", "curso": "3ro", "paralelo": "A", "nivel": "Bachillerato"}, {"nombre": "ALMACHE NAVARRETE NICOLE ANTONELLA", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "ALVARADO CABRERA MARTINA", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "ANCHATUÑA VELASCO GENESIS MICAELA", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "ARCINIEGA GUERRA DIEGO ALEJANDRO", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "CARRILLO GAVILANES ESTEFANIA AMY", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "CERVANTES PRADO GABRIEL SEBASTIAN", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "CHIRIBOGA RIVADENEIRA IVANNA RAPHAELA", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "CUADRADO MORENO PAULA ISABELA", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "DELGADO MUQUINCHE REBECCA ABIGAIL", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "DELGADO ROSALES DANNA MARTINA", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "FARRO AGUIRRE CHRISTOPHER ADRIAN", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "FERNANDEZ SALVADOR SARAH VICTORIA", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "HERNANDEZ VINZA ISABELLA", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "JARAMILLO OTEIZA RAFAELA DOMINIQUE", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "MANZANO SUAN MATIAS SEBASTIAN", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "NAVAS RUIZ ANABELL SOFIA", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "REYES SANCHEZ FRANKLIN JOEL", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "TAIPE VASQUEZ DANIEL ALEJANDRO", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "TRONCOSO TORRES ARIEL ALEJANDRO", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "VAREA NARANJO MARÍA CAMILA", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "VASCONEZ VALENCIA CARLOS EDUARDO", "curso": "3ro", "paralelo": "B", "nivel": "Bachillerato"}, {"nombre": "BAEZ YANEZ CRISTOPHER JOEL", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "BONILLA VARGAS BRUNO FARAD", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "CHICAIZA SANTILLÁN CAMILA ESTEFFY", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "CHIRIBOGA ARIAS MICKAELA ANAHÍ", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "CRUZ GÁLVEZ MARIA PAZ", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "DALGO GAIBOR LUCIA ISABEL", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "HIDALGO VIVES MARÍA FERNANDA", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "JÁCOME ESPINEL ROMINA", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "LEON REA MARIUXI NOEMI", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "MAIRENA GIOVANNA VALENTINA", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "MONTENEGRO LINCANGO DOMENICA ALEJANDRA", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "MUÑOZ ESCOBAR JUAN PABLO", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "PACHECO GUERRA JUAN DAVID", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "PROAÑO TORRES JOSE ANTONIO", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "QUIÑONEZ FLORES MARIA CRISTINA", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "TAPIA BRITO FELIPE ANDRÉS", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "VALENCIA PORTILLA ESTEBAN DAVID", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "VARGAS ENRIQUEZ ARIANA VALENTINA", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "VELASCO SALGADO JULIANA RAFAELA", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "VILLACRES SALTOS DAVID ISRAEL", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}, {"nombre": "YELA VALLEJO RICARDO MAURICIO", "curso": "3ro", "paralelo": "C", "nivel": "Bachillerato"}];
+
+const MATERIAS = {
+  Bachillerato: ["Personal Branding", "Video Mapping", "Programación No-Code", "Diseño Gráfico"],
+  Basica: ["Multimedia y Creación de Contenido", "Robótica e IA", "Personal Branding", "Producción Musical"]
+};
+const CUPO_MAX = 25;
+
+let estudianteActual = null; // {nombre, curso, paralelo, nivel, origen}
+let materiaSeleccionada = null;
+let cuposActuales = null; // { cupoMax, porNivel: { Bachillerato:{disponibles,conteo}, Basica:{...} } }
+
+const $ = (id) => document.getElementById(id);
+
+/* ---------- Autocompletado ---------- */
+const inputBuscar = $('buscar');
+const cajaSugerencias = $('sugerencias');
+
+inputBuscar.addEventListener('input', () => {
+  const q = inputBuscar.value.trim().toUpperCase();
+  cajaSugerencias.innerHTML = '';
+  estudianteActual = null;
+  $('datosEstudiante').classList.add('oculto');
+  $('card-materias').classList.add('oculto');
+
+  if (q.length < 2) { cajaSugerencias.style.display = 'none'; return; }
+
+  const coincidencias = ESTUDIANTES.filter(e => e.nombre.toUpperCase().includes(q)).slice(0, 8);
+
+  if (coincidencias.length === 0) {
+    cajaSugerencias.innerHTML = '<div class="no-match">No se encontró ese nombre en la lista oficial de estudiantes. Verifica que esté bien escrito. Si el problema persiste, acércate a Secretaría.</div>';
+    cajaSugerencias.style.display = 'block';
+    return;
+  }
+
+  coincidencias.forEach(e => {
+    const div = document.createElement('div');
+    div.textContent = `${e.nombre} — ${e.curso} "${e.paralelo}" (${e.nivel === 'Bachillerato' ? 'Bachillerato' : 'Básica'})`;
+    div.addEventListener('click', () => seleccionarEstudiante(e));
+    cajaSugerencias.appendChild(div);
+  });
+  cajaSugerencias.style.display = 'block';
+});
+
+document.addEventListener('click', (ev) => {
+  if (!ev.target.closest('.autocomplete-wrap')) cajaSugerencias.style.display = 'none';
+});
+
+function seleccionarEstudiante(e){
+  estudianteActual = { nombre: e.nombre, curso: e.curso, paralelo: e.paralelo, nivel: e.nivel, origen: 'lista' };
+  inputBuscar.value = e.nombre;
+  cajaSugerencias.style.display = 'none';
+
+  $('datosEstudiante').classList.remove('oculto');
+  $('nivel').value = e.nivel;
+  $('nivel').disabled = true;
+  $('nombreManual').value = e.nombre;
+  $('nombreManual').disabled = true;
+  $('curso').value = e.curso;
+  $('curso').disabled = true;
+  $('paralelo').value = e.paralelo;
+  $('paralelo').disabled = true;
+
+  mostrarMaterias(e.nivel);
+}
+
+/* ---------- Cupos y materias ---------- */
+async function cargarCupos(){
+  try {
+    const resp = await fetch(API_URL);
+    const data = await resp.json();
+    if (data.ok) cuposActuales = data.cupos;
+  } catch(err){
+    console.warn('No se pudieron cargar los cupos en línea todavía.', err);
+  }
+}
+
+function mostrarMaterias(nivel){
+  const badge = $('badgeNivel');
+  badge.textContent = nivel === 'Bachillerato' ? 'Bachillerato' : 'Educación Básica';
+  badge.className = 'badge ' + (nivel === 'Bachillerato' ? 'bachillerato' : 'basica');
+
+  const lista = $('listaMaterias');
+  lista.innerHTML = '';
+  materiaSeleccionada = null;
+  $('btnEnviar').disabled = true;
+  $('mensajeForm').className = 'mensaje';
+  $('mensajeForm').textContent = '';
+
+  MATERIAS[nivel].forEach(materia => {
+    const disponiblesNivel = (cuposActuales && cuposActuales.porNivel && cuposActuales.porNivel[nivel])
+      ? cuposActuales.porNivel[nivel].disponibles : {};
+    const disponibles = disponiblesNivel[materia] !== undefined ? disponiblesNivel[materia] : CUPO_MAX;
+    const llena = disponibles <= 0;
+
+    const div = document.createElement('div');
+    div.className = 'materia-opcion' + (llena ? ' llena' : '');
+    div.innerHTML = `
+      <div class="materia-info">
+        <input type="radio" name="materia" value="${materia}" ${llena ? 'disabled' : ''}>
+        <span class="materia-nombre">${materia}</span>
+      </div>
+      <span class="cupo-tag ${llena ? 'lleno' : (disponibles <= 5 ? 'pocos' : 'ok')}">
+        ${llena ? 'CUPOS LLENOS' : disponibles + '/' + CUPO_MAX + ' disponibles'}
+      </span>
+    `;
+    if (!llena){
+      div.addEventListener('click', () => {
+        document.querySelectorAll('.materia-opcion').forEach(o => o.classList.remove('seleccionada'));
+        div.classList.add('seleccionada');
+        div.querySelector('input').checked = true;
+        materiaSeleccionada = materia;
+        $('btnEnviar').disabled = false;
+      });
+    }
+    lista.appendChild(div);
+  });
+
+  $('card-materias').classList.remove('oculto');
+  $('card-exito').classList.add('oculto');
+}
+
+/* ---------- Envío de inscripción ---------- */
+$('btnEnviar').addEventListener('click', async () => {
+  const msg = $('mensajeForm');
+  msg.className = 'mensaje';
+
+  if (!estudianteActual || !estudianteActual.nombre || !estudianteActual.curso || !estudianteActual.paralelo || !estudianteActual.nivel){
+    msg.className = 'mensaje error';
+    msg.textContent = 'Por favor completa todos tus datos.';
+    return;
+  }
+  if (!materiaSeleccionada){
+    msg.className = 'mensaje error';
+    msg.textContent = 'Selecciona una materia.';
+    return;
+  }
+
+  if (API_URL.includes('PEGA_AQUI')){
+    msg.className = 'mensaje error';
+    msg.textContent = 'Falta configurar la URL del backend (API_URL) en el código.';
+    return;
+  }
+
+  const btn = $('btnEnviar');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Enviando...';
+
+  try{
+    const resp = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        nombre: estudianteActual.nombre,
+        curso: estudianteActual.curso,
+        paralelo: estudianteActual.paralelo,
+        nivel: estudianteActual.nivel,
+        materia: materiaSeleccionada,
+        origen: estudianteActual.origen
+      })
+    });
+    const data = await resp.json();
+
+    if (!data.ok){
+      msg.className = 'mensaje error';
+      msg.textContent = data.error || 'Ocurrió un error al registrar la inscripción.';
+      btn.disabled = false;
+      btn.textContent = 'Confirmar inscripción';
+      if (data.cupos) { cuposActuales = data.cupos; mostrarMaterias(estudianteActual.nivel); }
+      return;
+    }
+
+    cuposActuales = data.cupos;
+
+    $('card-busqueda').classList.add('oculto');
+    $('card-materias').classList.add('oculto');
+    $('card-exito').classList.remove('oculto');
+    $('resumenFinal').innerHTML = `
+      <p><b>Nombre:</b> ${estudianteActual.nombre}</p>
+      <p><b>Nivel:</b> ${estudianteActual.nivel === 'Bachillerato' ? 'Bachillerato' : 'Educación Básica'}</p>
+      <p><b>Curso:</b> ${estudianteActual.curso} "${estudianteActual.paralelo}"</p>
+      <p><b>Materia optativa asignada:</b> ${materiaSeleccionada}</p>
+    `;
+  } catch(err){
+    msg.className = 'mensaje error';
+    msg.textContent = 'Error de conexión. Verifica tu internet e intenta de nuevo.';
+    btn.disabled = false;
+    btn.textContent = 'Confirmar inscripción';
+  }
+});
+
+/* Inicio: cargar cupos en línea al abrir la página */
+cargarCupos();
+setInterval(cargarCupos, 15000); // refresca cupos cada 15s por si otros estudiantes se inscriben
+</script>
+</body>
+</html>
